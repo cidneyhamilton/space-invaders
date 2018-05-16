@@ -9,11 +9,26 @@
             this.height = height;
             this.colliding = false;
         }
+
         draw () {
         };
 
         move () {
         };
+
+        clear () {
+            this.x = 0;
+            this.y = 0;
+            this.speed = 0;
+            this.speedX = 0;
+            this.speedY = 0;
+            this.alive = false;
+            this.colliding = false;
+        };
+
+        remove () {
+            this.context.clearRect(this.x, this.y, this.width, this.height);
+        }
     };
 
     class Player extends Drawable {
@@ -32,7 +47,7 @@
         };
 
         move () {
-            this.context.clearRect(this.x, this.y, this.width, this.height);
+            this.remove();
             if (this.moveLeft == true && this.x > 0) {
                 this.x -= this.speed;
             } else if (this.moveRight == true && this.x + this.width < this.canvasWidth) {
@@ -52,6 +67,7 @@
             super();
             this.alive = false;
             this.self = object;
+            this.init(0, 0, Sprites.bullet.width, Sprites.bullet.height);
         }
 
         spawn (x, y, speed) {
@@ -62,7 +78,7 @@
         }
         
         draw () {
-            this.context.clearRect(this.x, this.y, this.width, this.height);
+            this.remove();
             this.y -= this.speed;
             if (this.colliding) {
                 return true;
@@ -74,15 +90,55 @@
                 return false;
             }    
         }
-
-        clear () {
-            this.x = 0;
-            this.y = 0;
-            this.speed = 0;
-            this.alive = false;
-            this.colliding = false;
-        }
     }
+
+    class Enemy extends Drawable {
+
+        constructor () {
+            super();
+            this.alive = false;
+            this.init(0, 0, Sprites.enemy.width, Sprites.enemy.height);
+        }
+        
+        spawn (x, y, speed) {
+            this.x = x;
+            this.y = y;
+            this.speed = speed;
+            this.speedX = 0;
+            this.speedY = speed;
+            this.alive = true;
+            this.leftEdge = this.x - 90;
+            this.rightEdge = this.x + 90;
+            this.bottomEdge = this.y + 180;
+        }
+
+        draw () {
+            this.remove();
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.colliding) {
+                return true;
+            }
+            if (this.x <= this.leftEdge) {
+                this.speedX = this.speed;
+            } else if (this.x >= this.rightEdge + this.width) {
+                this.speedX = -this.speed;
+            } else if (this.y >= this.bottomEdge) {
+                this.speed = 1.5;
+                this.speedY = 0;
+                this.y -= 5;
+                this.speedX = -this.speed;
+            }
+
+            if (this.colliding) {
+                return true;
+            } else {
+                this.context.drawImage(Sprites.enemy, this.x, this.y);
+                return false;
+            }
+        }
+
+    };
 
     class Collection {
 
@@ -95,21 +151,14 @@
          * Populates the Collection array with objects
          */
         init (type) {
-            if (type === "bullet") {
-                for (let i = 0; i < this.size; i++) {
-                    // Initalize the bullet object
-                    let bullet = new Bullet("bullet");
-                    bullet.init(0, 0, Sprites.bullet.width,
-                                Sprites.bullet.height);
-                    this.pool[i] = bullet;
-                } 
-            } else if (type === "enemy") {
-                for (let i = 0; i < this.size; i++) {
-                    let enemy = new Enemy();
-                    enemy.init(0, 0, Sprites.enemy.width, 
-                        Sprites.enemy.height);
-                    this.pool[i] = enemy;
+            for (let i = 0; i < this.size; i++) {
+                let newObject;
+                if (type === "bullet") {
+                    newObject = new Bullet("bullet");
+                } else if (type === "enemy") {
+                    newObject = new Enemy();
                 }
+                this.pool[i] = newObject;
             }
         };
         /*
@@ -118,7 +167,6 @@
          */
         get (x, y, speed) {
             if (!this.pool[this.size - 1].alive) {
-                console.log("Spawning with speed: " + speed);
                 this.pool[this.size - 1].spawn(x, y, speed);
                 this.pool.unshift(this.pool.pop());
             }
@@ -154,63 +202,6 @@
         };
     }
 
-    class Enemy extends Drawable {
-
-        constructor () {
-            super();
-            this.alive = false;
-        }
-        
-        spawn (x, y, speed) {
-            this.x = x;
-            this.y = y;
-            this.speed = speed;
-            this.speedX = 0;
-            this.speedY = speed;
-            this.alive = true;
-            this.leftEdge = this.x - 90;
-            this.rightEdge = this.x + 90;
-            this.bottomEdge = this.y + 180;
-        }
-
-        draw () {
-            this.context.clearRect(this.x - 1, this.y, this.width + 1, this.height);
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.colliding) {
-                return true;
-            }
-            if (this.x <= this.leftEdge) {
-                this.speedX = this.speed;
-            } else if (this.x >= this.rightEdge + this.width) {
-                this.speedX = -this.speed;
-            } else if (this.y >= this.bottomEdge) {
-                console.log("This.y: " + this.y);
-                this.speed = 1.5;
-                this.speedY = 0;
-                this.y -= 5;
-                this.speedX = -this.speed;
-            }
-
-            if (this.colliding) {
-                return true;
-            } else {
-                this.context.drawImage(Sprites.enemy, this.x, this.y);
-                return false;
-            }
-        }
-
-        clear () {
-            this.x = 0;
-            this.y = 0;
-            this.speed = 0;
-            this.speedX = 0;
-            this.speedY = 0;
-            this.alive = false;
-            this.colliding = false;
-        };
-    };
-
     const Game = {
         init: function () {
             // Get the canvases
@@ -234,44 +225,64 @@
 
                 Game.player = new Player();
 
-                let playerStartX = Game.playerCanvas.width / 2;
-                let playerStartY = Game.playerCanvas.height / 5 * 4;
-                Game.player.init(playerStartX,
-                    playerStartY,
+                this.playerStartX = Game.playerCanvas.width / 2;
+                this.playerStartY = Game.playerCanvas.height / 5 * 4;
+                Game.player.init(this.playerStartX,
+                    this.playerStartY,
                     Sprites.player.width,
                     Sprites.player.height);
 
-                Game.enemies = new Collection(30);
+                Game.enemies = new Collection(18);
                 Game.enemies.init("enemy");
-
-                let height = Sprites.enemy.height;
-                let width = Sprites.enemy.width;
-                let x = 100;
-                let y = -height;
-                let spacer = y * 1.5;
-                for (let i = 1; i <= 18; i++) {
-                    Game.enemies.get(x, y, 10);
-                    x += width + 25;
-                    if (i % 6 == 0) {
-                        x = 100;
-                        y += spacer
-                    }
-                }
+                Game.spawnEnemies();
+                
 
                 return true;
             } else {
                 return false;
             }
         },
+        spawnEnemies: function() {
+            let height = Sprites.enemy.height;
+            let width = Sprites.enemy.width;
+            let x = width;
+            let y = -height;
+            let spacer = y * 1.5;
+            for (let i = 1; i <= Game.enemies.size; i++) {
+                Game.enemies.get(x, y, 10);
+                x += width + 25;
+                if (i % 6 == 0) {
+                    x = width;
+                    y += spacer
+                }
+            }
+        },
         setup: function() {
             Game.player.draw();
             window.animate();
+        },
+        restart: function() {
+            Game.playerContext.clearRect(0, 0, 
+                Game.playerCanvas.width,
+                Game.playerCanvas.height);
+            Game.mainContext.clearRect(0, 0,
+                Game.playerCanvas.width,
+                Game.playerCanvas.height);
+            Game.player.init(Game.playerStartX,
+                    Game.playerStartY,
+                    Sprites.player.width,
+                    Sprites.player.height);
+            Game.enemies.init("enemy");
+            Game.spawnEnemies();
         }
     };
 
     window.init = function () {
         if (Game.init()) {
             Game.setup();
+
+            // Set up restart button
+            document.getElementById("restart").addEventListener("click", Game.restart);
         }
     };
 
@@ -295,8 +306,7 @@
                     object1.colliding = true;
                     object2.colliding = true;
                 }
-            }
-            
+            }   
         }
     }
 
