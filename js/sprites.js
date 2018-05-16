@@ -11,9 +11,9 @@
         this.enemy = new Image();
         this.enemy.src = "img/alien.png";
 
-        var numImages = 3;
-        var numLoaded = 0;
-        var imageLoaded = function () {
+        const numImages = 3;
+        let numLoaded = 0;
+        const imageLoaded = function () {
             numLoaded++;
             if (numLoaded === numImages) {
                 window.init();
