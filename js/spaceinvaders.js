@@ -1,94 +1,71 @@
 (function () {
     'use strict';
 
-    var Sprites = new function () {
-        this.player = new Image();
-        this.player.src = "img/tank.png";
-
-        this.bullet = new Image();
-        this.bullet.src = "img/bullet.png";
-
-        this.enemy = new Image();
-        this.enemy.src = "img/alien.png";
-
-        var numImages = 3;
-        var numLoaded = 0;
-        var imageLoaded = function() {
-            numLoaded++;
-            if (numLoaded === numImages) {
-                init();
-            }
-        }
-        this.player.onload = function() {
-            imageLoaded();
-        }
-
-        this.bullet.onload = function() {
-            imageLoaded();
-        }
-
-        this.enemy.onload = function()  {
-            imageLoaded();
-        }
-    };
-
-    var Drawable = function () {
-        this.init = function (x, y, width, height) {
+    class Drawable {
+        init (x, y, width, height) {
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
-        };
-
-        this.speed = 0;
-
-        this.canvasWidth = 0;
-        this.canvasHeight = 0;
-
-        this.draw = function () {
+        }
+        draw () {
         };
     };
 
-    var Player = function () {
-        this.bulletPool = new Pool(30);
-        this.bulletPool.init("bullet");
-        this.moveLeft = false;
-        this.moveRight = false;
-        this.speed = 3;
-        this.draw = function () {
+    class Player extends Drawable {
+
+        constructor() {
+            super();
+            this.bulletPool = new Pool(30);
+            this.bulletPool.init("bullet");
+            this.moveLeft = false;
+            this.moveRight = false;
+            this.speed = 3;
+        }
+
+        draw () {
             this.context.drawImage(Sprites.player, this.x, this.y);
         };
 
-        this.move = function() {
+        move () {
             this.context.clearRect(this.x, this.y, this.width, this.height);
             if (this.moveLeft == true && this.x > 0) {
+                console.log("Old x: " + this.x);
+                console.log("Speed: " + this.speed);
                 this.x -= this.speed;
+                console.log("New x: " + this.x);
             } else if (this.moveRight == true && this.x + this.width < this.canvasWidth) {
-                console.log("Canvas width: " + this.canvasWidth);
                 this.x += this.speed;
             }
             this.draw();
         }
 
-        this.fire = function() {
+        fire () {
             console.log("Firing!");
-            this.bulletPool.get(this.x + this.width/2, this.y - 8, 3);
+            this.bulletPool.get(this.x + this.width / 2, this.y - 8, 3);
         }
     };
 
-    Player.prototype = new Drawable();
+    class Bullet extends Drawable {
 
-    var Bullet = function (object) {
-        this.alive = false;
-        this.self = object;
-        this.spawn = function(x, y, speed) {
+        constructor (object) {
+            super();
+            this.alive = false;
+            this.self = object;
+        }
+
+        spawn (x, y, speed) {
             this.x = x;
             this.y = y;
             this.speed = speed;
             this.alive = true;
-        };
-
-        this.draw = function() {
+        }
+        
+        draw () {
+            console.log("X: " + this.x);
+            console.log("Y: " + this.y);
+            console.log("Width: " + this.width);
+            console.log("Height: " + this.height);
             this.context.clearRect(this.x, this.y, this.width, this.height);
             this.y -= this.speed;
             if (this.y <= 0 - this.height) {
@@ -96,52 +73,52 @@
             } else {
                 this.context.drawImage(Sprites.bullet, this.x, this.y);
             }    
-        };
+        }
 
-        this.clear = function() {
+        clear () {
             this.x = 0;
             this.y = 0;
             this.speed = 0;
             this.alive = false;
         }
-    };
+    }
 
-    Bullet.prototype = new Drawable();
+    class Pool {
 
-    var Pool = function(maxSize) {
-        var size = maxSize; // Max objects allowed in the pool
-        var pool = [];
-
+        constructor (maxSize) {
+            this.size = maxSize; // Max objects allowed in the pool
+            this.pool = [];
+        }
+        
         /*
          * Populates the pool array with Bullet objects
          */
-        this.init = function (object) {
+        init (object) {
             if (object === "bullet") {
-                for (var i = 0; i < size; i++) {
+                for (var i = 0; i < this.size; i++) {
                     // Initalize the bullet object
                     var bullet = new Bullet("bullet");
-                    bullet.init(0,0, Sprites.bullet.width,
+                    bullet.init(0, 0, Sprites.bullet.width,
                                 Sprites.bullet.height);
-                    pool[i] = bullet;
+                    this.pool[i] = bullet;
                 } 
             } else if (object === "enemy") {
-                for (var i = 0; i < size; i++) {
+                for (var i = 0; i < this.size; i++) {
                     var enemy = new Enemy();
-                    enemy.init(0,0, Sprites.enemy.width, 
+                    enemy.init(0, 0, Sprites.enemy.width, 
                         Sprites.enemy.height);
-                    pool[i] = enemy;
+                    this.pool[i] = enemy;
                 }
             }
-            
         };
         /*
          * Grabs the last item in the list and initializes it and
          * pushes it to the front of the array.
          */
-        this.get = function(x, y, speed) {
-            if (!pool[size - 1].alive) {
-                pool[size - 1].spawn(x, y, speed);
-                pool.unshift(pool.pop());
+        get (x, y, speed) {
+            if (!this.pool[this.size - 1].alive) {
+                this.pool[this.size - 1].spawn(x, y, speed);
+                this.pool.unshift(this.pool.pop());
             }
         };
 
@@ -149,25 +126,30 @@
          * Draws any in use Bullets. If a bullet goes off the screen,
          * clears it and pushes it to the front of the array.
          */
-        this.animate = function() {
-            for (var i = 0; i < size; i++) {
+        animate () {
+            for (var i = 0; i < this.size; i++) {
                 // Only draw until we find a bullet that is not alive
-                if (pool[i].alive) {
-                    if (pool[i].draw()) {
-                        pool[i].clear();
-                        pool.push((pool.splice(i,1))[0]);
+                if (this.pool[i].alive) {
+                    if (this.pool[i].draw()) {
+                        this.pool[i].clear();
+                        this.pool.push((this.pool.splice(i,1))[0]);
                     }
-                }
-                else
+                } else {
                     break;
+                }
             }
         };
     }
 
-    var Enemy = function() {
-        this.alive = false;
+    class Enemy extends Drawable {
 
-        this.spawn = function(x, y, speed) {
+        constructor () {
+            super();
+            this.alive = false;
+        }
+        
+
+        spawn (x, y, speed) {
             this.x = x;
             this.y = y;
             this.speed = speed;
@@ -179,8 +161,7 @@
             this.bottomEdge = this.y + 140;
         }
 
-        this.draw = function() {
-            console.log("Draw enemy");
+        draw () {
             this.context.clearRect(this.x - 1, this.y, this.width + 1, this.height);
             this.x += this.speedX;
             this.y += this.speedY;
@@ -200,8 +181,6 @@
             // TODO: fire bullets
         }
     };
-
-    Enemy.prototype = new Drawable();
 
     var Game = {
         init: function () {
@@ -229,9 +208,9 @@
 
                 var playerStartX = Game.playerCanvas.width / 2;
                 var playerStartY = Game.playerCanvas.height / 4 * 3;
-                Game.player.init(playerStartX, 
-                    playerStartY, 
-                    Sprites.player.width, 
+                Game.player.init(playerStartX,
+                    playerStartY,
+                    Sprites.player.width,
                     Sprites.player.height);
 
                 Game.enemies = new Pool(30);
@@ -256,23 +235,22 @@
                 console.log("Canvas not supported!");
                 return false;
             }
-            
         },
         setup: function() {
+            console.log("Setting up the game...");
             Game.player.draw();
-            animate();
-            
+            window.animate();
         }
     };
 
-    var init = function () {
+    window.init = function () {
         if (Game.init()) {
             Game.setup();
         }
     };
 
-    var animate = function() {
-        requestAnimationFrame( animate );
+    window.animate = function() {
+        requestAnimationFrame( window.animate );
         Game.player.move();
         Game.player.bulletPool.animate();
         Game.enemies.animate();
@@ -287,12 +265,13 @@
         }
         if (keyCode === 37) {
             e.preventDefault();
+            console.log("Moving left");
             Game.player.moveLeft = true;
         }
         if (keyCode == 39) {
             e.preventDefault();
             Game.player.moveRight = true;
-        } 
+        }
     }
 
     document.onkeyup = function(e) {
@@ -300,7 +279,7 @@
         if (keyCode === 37) {
             e.preventDefault();
             Game.player.moveLeft = false;
-        } 
+        }
         if (keyCode == 39) {
             e.preventDefault();
             Game.player.moveRight = false;
