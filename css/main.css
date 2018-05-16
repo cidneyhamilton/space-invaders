@@ -1,0 +1,23 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.container {
+    margin: 48px auto;
+    width: 480px;
+    border: 3px solid #ccc;
+}
+
+canvas {
+    position: relative;
+    background: transparent;
+    display: block;
+    
+}
+
+canvas#main {
+    margin-top: -320px;
+}
