@@ -37,7 +37,6 @@
         constructor() {
             super();
             this.bullets = new Collection(30);
-            this.bullets.init("bullet");
             this.moveLeft = false;
             this.moveRight = false;
             this.speed = 3;
@@ -50,6 +49,7 @@
                 Sprites.player.width,
                 Sprites.player.height);
             this.alive = true;
+            this.bullets.init("bullet");
         }
 
         draw () {
@@ -158,7 +158,7 @@
             super();
             this.alive = false;
             this.init(0, 0, Sprites.enemy.width, Sprites.enemy.height);
-            this.percentFire = .01;
+            this.percentFire = 3;
         }
         
         spawn (x, y, speed) {
@@ -193,7 +193,7 @@
             }
             this.context.drawImage(Sprites.enemy, this.x, this.y);
             let chance = Math.floor(Math.random() * 500);
-            if (chance < 1) {
+            if (chance < this.percentFire) {
                 this.fire();
             }
             return false;
@@ -201,7 +201,7 @@
 
         // Fires a bullet
         fire () {
-            Game.enemyBullets.get(this.x + this.width/2, this.y + this.height, 1);
+            Game.enemyBullets.get(this.x + this.width/2, this.y + this.height, 2);
         }
 
     };
@@ -221,10 +221,13 @@
                 let newObject;
                 if (type === "bullet") {
                     newObject = new PlayerBullet("bullet");
+                    newObject.init(0,0, Sprites.bullet.width, Sprites.bullet.height);
                 } else if (type === "enemy") {
                     newObject = new Enemy();
+                    newObject.init(0,0, Sprites.enemy.width, Sprites.enemy.height);
                 } else if (type === "enemyBullet") {
                     newObject = new EnemyBullet("enemyBullet");
+                    newObject.init(0,0, Sprites.bullet.width, Sprites.bullet.height);
                 }
                 this.pool[i] = newObject;
             }
@@ -341,8 +344,8 @@
                 Game.playerCanvas.width,
                 Game.playerCanvas.height);
             Game.mainContext.clearRect(0, 0,
-                Game.playerCanvas.width,
-                Game.playerCanvas.height); 
+                Game.mainCanvas.width,
+                Game.mainCanvas.height); 
         },
         gameOver: function () {
             document.getElementById('game-info').textContent = "Game Over";
@@ -358,29 +361,39 @@
 
     window.init = function () {
         if (Game.init()) {
-            Game.setup();
+            Game.then = Date.now();
 
             // Set up restart button
             document.getElementById("restart").addEventListener("click", Game.restart);
         }
     };
 
+    // The main game loop
     window.animate = function () {
         if (Game.player.alive) {
+            let now = Date.now();
+            let delta = (now - Game.then);
+            console.log("Delta: " + delta);
             requestAnimationFrame( window.animate );
-            Game.player.move();
-            Game.player.bullets.animate();
-            Game.enemies.animate();
-            Game.enemyBullets.animate();
-            detectEnemyHits();
-            detectPlayerHits(); 
 
-            // spawn a new wave after enemies have been defeated
-            if (Game.enemies.isEmpty()) {
-                Game.spawnEnemies(); 
+            if (delta > 1000/60) {
+                Game.player.move();
+                Game.player.bullets.animate();
+                Game.enemies.animate();
+                Game.enemyBullets.animate();
+                detectEnemyHits();
+                detectPlayerHits(); 
+
+                // spawn a new wave after enemies have been defeated
+                if (Game.enemies.isEmpty()) {
+                    Game.spawnEnemies(); 
+                }
+
+                document.getElementById('score').innerHTML = Game.playerScore;
+                Game.then = now; 
             }
 
-            document.getElementById('score').innerHTML = Game.playerScore;
+                  
         }
          
     }
