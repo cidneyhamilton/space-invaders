@@ -11,6 +11,9 @@
         this.enemy = new Image();
         this.enemy.src = "img/alien.png";
 
+        this.enemyBullet = new Image();
+        this.enemyBullet.src = "img/bullet2.png";
+
         const numImages = 3;
         let numLoaded = 0;
         const imageLoaded = function () {
@@ -31,5 +34,9 @@
         this.enemy.onload = function () {
             imageLoaded();
         };
+
+        this.enemyBullet.onLoad = function() {
+            imageLoaded();
+        }
     };
 }(window, undefined));
