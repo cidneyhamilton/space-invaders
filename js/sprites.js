@@ -1,42 +1,57 @@
 (function () {
     'use strict';
 
-    window.Sprites = new function () {
-        this.player = new Image();
-        this.player.src = "img/tank.png";
+    class SpriteManager {
 
-        this.bullet = new Image();
-        this.bullet.src = "img/bullet.png";
-
-        this.enemy = new Image();
-        this.enemy.src = "img/alien.png";
-
-        this.enemyBullet = new Image();
-        this.enemyBullet.src = "img/bullet2.png";
-
-        const numImages = 3;
-        let numLoaded = 0;
-        const imageLoaded = function () {
-            numLoaded++;
-            if (numLoaded === numImages) {
-                window.init();
-            }
-        };
-
-        this.player.onload = function () {
-            imageLoaded();
-        };
-
-        this.bullet.onload = function () {
-            imageLoaded();
-        };
-
-        this.enemy.onload = function () {
-            imageLoaded();
-        };
-
-        this.enemyBullet.onLoad = function() {
-            imageLoaded();
+        constructor() {
+            this.assets = [];
+            this.numLoaded = 0;
+            this.cache = {};
+            this.successCount = 0;
         }
+
+        getAsset(path) {
+            return this.cache[path];
+        }
+
+        queueAsset(path) {
+            this.assets.push(path);
+        }
+
+        queueAll(callback) {
+            for (let i = 0; i < this.assets.length; i++) {
+                let path = this.assets[i];
+                let img = new Image();
+                let that = this;
+                img.addEventListener("load", function() {
+                    that.successCount++;
+                    if (that.isDone()) {
+                        callback();
+                    }
+                }, false);
+                img.src = path;
+                this.cache[path] = img;
+            }
+        }
+
+        isDone() {
+            return (this.assets.length === this.successCount);
+        }
+
     };
-}(window, undefined));
+
+    window.Sprites = new SpriteManager();
+    Sprites.queueAsset("img/alien.png");
+    Sprites.queueAsset("img/bullet.png");
+    Sprites.queueAsset("img/bullet2.png");
+    Sprites.queueAsset("img/tank.png");
+
+    Sprites.queueAll(function() {
+        Sprites.player = Sprites.getAsset("img/tank.png");
+        Sprites.bullet = Sprites.getAsset("img/bullet.png");
+        Sprites.enemyBullet = Sprites.getAsset("img/bullet2.png");
+        Sprites.enemy = Sprites.getAsset("img/alien.png");
+        window.init();
+    });
+
+}());

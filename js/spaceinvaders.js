@@ -2,6 +2,7 @@
     'use strict';
 
     class Drawable {
+
         init (x, y, width, height) {
             this.x = x;
             this.y = y;
@@ -27,7 +28,7 @@
         };
 
         remove () {
-            this.context.clearRect(this.x, this.y, this.width, this.height);
+            this.context.clearRect(this.x - 1, this.y - 1 , this.width + 2, this.height + 2);
         }
     };
 
@@ -44,7 +45,6 @@
         }
 
         spawn () {
-
             this.init(Game.playerStartX,
                 Game.playerStartY,
                 Sprites.player.width,
@@ -277,7 +277,7 @@
         }
     }
 
-    const Game = {
+    window.Game = {
         init: function () {
             Game.playerScore = 0;
 
@@ -420,35 +420,6 @@
             return true;
         }
         return false;
-    }
-
-    document.onkeydown = function(e) {
-        let keyCode = (e.keyCode) ? e.keyCode : e.charCode;
-        // SPACE
-        if (keyCode === 32) {
-            e.preventDefault();
-            Game.player.fire();
-        }
-        if (keyCode === 37) {
-            e.preventDefault();
-            Game.player.moveLeft = true;
-        }
-        if (keyCode == 39) {
-            e.preventDefault();
-            Game.player.moveRight = true;
-        }
-    }
-
-    document.onkeyup = function(e) {
-        let keyCode = (e.keyCode) ? e.keyCode : e.charCode;
-        if (keyCode === 37) {
-            e.preventDefault();
-            Game.player.moveLeft = false;
-        }
-        if (keyCode == 39) {
-            e.preventDefault();
-            Game.player.moveRight = false;
-        }
     }
 
 }());
