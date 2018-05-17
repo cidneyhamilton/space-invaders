@@ -178,6 +178,7 @@
             this.x += this.speedX;
             this.y += this.speedY;
             if (this.colliding) {
+                Game.playerScore += 10;
                 return true;
             }
             if (this.x <= this.leftEdge) {
@@ -190,17 +191,12 @@
                 this.y -= 5;
                 this.speedX = -this.speed;
             }
-
-            if (this.colliding) {
-                return true;
-            } else {
-                this.context.drawImage(Sprites.enemy, this.x, this.y);
-                let chance = Math.floor(Math.random() * 500);
-                if (chance < 1) {
-                    this.fire();
-                }
-                return false;
+            this.context.drawImage(Sprites.enemy, this.x, this.y);
+            let chance = Math.floor(Math.random() * 500);
+            if (chance < 1) {
+                this.fire();
             }
+            return false;
         }
 
         // Fires a bullet
@@ -275,14 +271,19 @@
                 }
             }
         };
+
+        isEmpty() {
+            return this.getAll().length === 0;
+        }
     }
 
     const Game = {
         init: function () {
+            Game.playerScore = 0;
+
             // Get the canvases
             Game.playerCanvas = document.getElementById("player");
             Game.playerContext = Game.playerCanvas.getContext("2d");
-
             Game.mainCanvas = document.getElementById("main");
             Game.mainContext = Game.playerCanvas.getContext("2d");
             if (Game.playerContext) {
@@ -351,6 +352,7 @@
             Game.clearScreen();
             Game.start();
             Game.setup();
+            Game.playerScore = 0;
         }
     };
 
@@ -370,42 +372,44 @@
             Game.player.bullets.animate();
             Game.enemies.animate();
             Game.enemyBullets.animate();
-            detectCollisions();
-            detectPlayerHits();   
+            detectEnemyHits();
+            detectPlayerHits(); 
+
+            // spawn a new wave after enemies have been defeated
+            if (Game.enemies.isEmpty()) {
+                Game.spawnEnemies(); 
+            }
+
+            document.getElementById('score').innerHTML = Game.playerScore;
         }
          
     }
 
-    const detectCollisions = function () {
-        let objects = [];
-        objects = objects.concat(Game.enemies.getAll());
-        objects = objects.concat(Game.player.bullets.getAll());
-        for (let i = 0; i < objects.length; i++) {
-            let object1 = objects[i];
-            for (let j = i + 1; j < objects.length; j++) {
-                let object2 = objects[j];
+    const detectCollisons = function(colliders) {
+        for (let i = 0; i < colliders.length; i++) {
+            let object1 = colliders[i];
+            for (let j = i + 1; j < colliders.length; j++) {
+                let object2 = colliders[j];
                 if (isCollision(object1, object2)) {
                     object1.colliding = true;
                     object2.colliding = true;
                 }
             }   
         }
+    }
+
+    const detectEnemyHits = function () {
+        let objects = [];
+        objects = objects.concat(Game.enemies.getAll());
+        objects = objects.concat(Game.player.bullets.getAll());
+        detectCollisons(objects);
     }
 
     const detectPlayerHits = function() {
         let objects = [];
         objects = objects.concat(Game.enemyBullets.getAll());
         objects = objects.concat(Game.player);
-        for (let i = 0; i < objects.length; i++) {
-            let object1 = objects[i];
-            for (let j = i + 1; j < objects.length; j++) {
-                let object2 = objects[j];
-                if (isCollision(object1, object2)) {
-                    object1.colliding = true;
-                    object2.colliding = true;
-                }
-            }   
-        }
+        detectCollisons(objects);
     }
 
     const isCollision = function(object1, object2) {
