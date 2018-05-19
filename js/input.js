@@ -20,6 +20,9 @@
 
     document.onkeyup = function(e) {
         let keyCode = (e.keyCode) ? e.keyCode : e.charCode;
+        if (keyCode === 32) {
+            e.preventDefault();
+        }
         if (keyCode === 37) {
             e.preventDefault();
             Game.player.moveLeft = false;
