@@ -1,6 +1,6 @@
 # Space Invaders
 
-A minimalistic Space Invaders clone in JavaScript and HTML.
+A minimalistic Space Invaders clone in JavaScript and HTML. Play it [here](https://cidneyhamilton.github.io/space-invaders/)
 
 ## Credits
 
