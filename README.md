@@ -4,8 +4,8 @@ A minimalistic Space Invaders clone in JavaScript and HTML. Play it [here](https
 
 ## Credits
 
-Tank by Arthur Shlain from the Noun Project.
+Tank graphic by Arthur Shlain from the [Noun Project](https://thenounproject.com/). 
+Bullet icon by Jose Manuel de Laa from the [Noun Project](https://thenounproject.com/).
+Alien head graphic by lastspark from the [Noun Project](https://thenounproject.com/). 
 
-Bullet icon by Jose Manuel de Laa from the Noun Project.
-
-Alien head icon by lastspark from the Noun Project.
+All icons available under the [Creative Commons CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
